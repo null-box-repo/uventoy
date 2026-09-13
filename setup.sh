@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}[1/5] Updating packages...${NC}"
+apk update && echo -e "${GREEN}[1/5] Update complete${NC}"
+
+echo -e "${BLUE}[2/5] Upgrading packages...${NC}"
+apk upgrade && echo -e "${GREEN}[2/5] Upgrade complete${NC}"
+
+echo -e "${BLUE}[3/5] Checking nodejs...${NC}"
+if command -v node &> /dev/null; then
+    echo -e "${GREEN}[3/5] nodejs is already installed${NC}"
+else
+    echo -e "${YELLOW}[3/5] nodejs not found${NC}"
+    echo -e "${BLUE}[3/5] Installing nodejs...${NC}"
+    apk add nodejs && echo -e "${GREEN}[3/5] nodejs installed successfully${NC}"
+fi
+
+echo -e "${BLUE}[4/5] Checking wget...${NC}"
+if command -v wget &> /dev/null; then
+    echo -e "${GREEN}[4/5] wget is already installed${NC}"
+else
+    echo -e "${YELLOW}[4/5] wget not found${NC}"
+    echo -e "${BLUE}[4/5] Installing wget...${NC}"
+    apk add wget && echo -e "${GREEN}[4/5] wget installed successfully${NC}"
+fi
+
+echo -e "${BLUE}[5/5] Downloading latest Ventoy release...${NC}"
+VENTOY_URL=$(wget -qO- https://api.github.com/repos/ventoy/Ventoy/releases/latest \
+    | grep "browser_download_url.*linux.tar.gz" \
+    | cut -d '"' -f 4)
+if [ -z "$VENTOY_URL" ]; then
+    echo -e "${RED}Failed to fetch Ventoy release URL${NC}"
+    exit 1
+fi
+wget -O ventoy-latest.tar.gz "$VENTOY_URL" \
+    && echo -e "${GREEN}[5/5] Ventoy downloaded successfully${NC}"
+
+echo -e "${BLUE}[5/5] Extracting Ventoy archive...${NC}"
+EXTRACTED_DIR=$(tar -tzf ventoy-latest.tar.gz | head -1 | cut -d '/' -f 1)
+tar -xzf ventoy-latest.tar.gz -C .
+if [ -n "$EXTRACTED_DIR" ] && [ "$EXTRACTED_DIR" != "ventoy" ]; then
+    rm -rf ventoy
+    mv "$EXTRACTED_DIR" ventoy
+fi
+echo -e "${GREEN}[5/5] Ventoy extracted and renamed to 'ventoy'${NC}"
+
+echo -e "${GREEN}All done.${NC}"
