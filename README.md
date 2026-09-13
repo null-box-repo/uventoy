@@ -1,6 +1,6 @@
 # UVentoy
 
-![logo](icon.jpg)
+![logo](icon.png)
 
 Unofficial Ventoy: Install to SD card / USB device now!
 
